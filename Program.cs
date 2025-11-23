@@ -5,7 +5,7 @@ List<User> users = UserStorage.LoadUsers();
 
 while (true)
 {
-    Console.WriteLine("Choose an option:");
+    Console.WriteLine("\nChoose an option:");
     Console.WriteLine("1) Register");
     Console.WriteLine("2) Login");
     Console.WriteLine("3) Log Out");
@@ -17,15 +17,20 @@ while (true)
     if (choice == "1")
     {
         // register
-        var username = User.CreateUserName();
-        var password = User.CreatePassword();
-        var user = new User()
+        while (true)
         {
-            UserName = username,
-            Password = PasswordHasher.ToSHA256(password)
-        };
-        users.Add(user);
-        UserStorage.SaveUsersAsJSON(users);
+            var username = User.CreateUserName();
+            if (username == String.Empty)
+            {
+                break;
+            }
+            var password = User.CreatePassword();
+            if (password == String.Empty)
+            {
+                break;
+            }
+            User.AddUserToJSON(username, password, users);
+        }
     }
     else if (choice == "2")
     {
@@ -41,12 +46,16 @@ while (true)
                 break;
             }
             remainingAttempts -= 1;
-            Console.WriteLine("\nWrite your username here, CTRL + C to quit");
+            Console.WriteLine("\nWrite your username here, 'q' to go back, CTRL + C to quit");
             var username = AuthService.ReadUserInput();
-            Console.WriteLine("\nWrite your password here, CTRL + C to quit");
+            Console.WriteLine("\nWrite your password here, 'q' to go back, CTRL + C to quit");
             var password = AuthService.ReadUserInput(isPassword: true);
             var result = AuthService.CheckIfUserExists(username, password, loginUsers);
             Console.WriteLine("\n" + result);
+            if (username == "q" || password == "q")
+            {
+                break;
+            }
             if (result != "Login successful")
             {
                 Console.WriteLine($"{remainingAttempts} attempts left");
