@@ -103,7 +103,5 @@ namespace ConsoleApp
             }
             return password.Trim();
         }
-
-
     }
 }

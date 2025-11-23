@@ -66,6 +66,39 @@ namespace ConsoleApp
             users.Add(user);
             UserStorage.SaveUsersAsJSON(users);
         }
+
+        public static void ChangeUserPassword(string username)
+        {
+            var users = UserStorage.LoadUsers();
+            Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
+            var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
+            var isPasswordCorrect = AuthService.CheckIfUserExists(username, repeatedPassword, users);
+            if (isPasswordCorrect != "Login successful")
+            {
+                Console.WriteLine("Password does not match");
+            }
+            else
+            {
+                Console.WriteLine("Write your new password here: ");
+                var newPassword = AuthService.ReadUserInput(isPassword: true);
+                users = UserStorage.LoadUsers();
+                foreach (User user in users)
+                {
+                    if (user.UserName == username)
+                    {
+                        user.Password = PasswordHasher.ToSHA256(newPassword);
+                        UserStorage.SaveUsersAsJSON(users);
+                        break;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+
+            }
+        }
     }
 
 }

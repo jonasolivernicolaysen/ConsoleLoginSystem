@@ -30,11 +30,13 @@ while (true)
                 break;
             }
             User.AddUserToJSON(username, password, users);
+            break;
         }
     }
     else if (choice == "2")
     {
         // login
+        // loginuser()
         var loginUsers = UserStorage.LoadUsers();
         var remainingAttempts = 3;
         bool shouldLogOut = false;
@@ -51,11 +53,11 @@ while (true)
             Console.WriteLine("\nWrite your password here, 'q' to go back, CTRL + C to quit");
             var password = AuthService.ReadUserInput(isPassword: true);
             var result = AuthService.CheckIfUserExists(username, password, loginUsers);
-            Console.WriteLine("\n" + result);
             if (username == "q" || password == "q")
             {
                 break;
             }
+            Console.WriteLine("\n" + result);
             if (result != "Login successful")
             {
                 Console.WriteLine($"{remainingAttempts} attempts left");
@@ -79,27 +81,13 @@ while (true)
 
                     if (loggedInUserChoice == "1")
                     {
-                        // change password
-                        var changePasswordUsers = UserStorage.LoadUsers();
-                        Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
-                        var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
-                        var isRepeatedPasswordCorrect = AuthService.CheckIfUserExists(username, repeatedPassword, changePasswordUsers);
-                        Console.WriteLine("\n" + result);
-                        if (result != "Login successful")
-                        {
-                            Console.WriteLine("Password does not match");
-                        }
-                        else
-                        {
-                            var newPassword = AuthService.ReadUserInput(isPassword: true);
-                            // continue here, i must delete old json array and create new one where this user had updated the password
-                            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                            
-                        }
+                        // changeuserpassword()
+                        User.ChangeUserPassword(username);
                     }
                     else if (loggedInUserChoice == "2")
                     {
                         // delete account
+                        // deleteuseraccount()
                         Console.WriteLine("Confirm your password to delete your account");
                         var loggedInUserProvidedPassword = AuthService.ReadUserInput(isPassword: true); 
                         var JSONUsers = UserStorage.LoadUsers();
