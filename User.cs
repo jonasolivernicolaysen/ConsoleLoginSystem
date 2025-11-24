@@ -99,6 +99,33 @@ namespace ConsoleApp
 
             }
         }
-    }
 
+        public static string DeleteAccount(string username)
+        {
+            Console.WriteLine("Confirm your password to delete your account");
+            var loggedInUserProvidedPassword = AuthService.ReadUserInput(isPassword: true);
+            var users = UserStorage.LoadUsers();
+
+            var user = users.FirstOrDefault(user => user.UserName == username);
+            if (user == null)
+            {
+                return "User doesn't exist";
+            }
+            else if (username == user.UserName && PasswordHasher.ToSHA256(loggedInUserProvidedPassword) == user.Password)
+            {
+                users.Remove(user);
+                UserStorage.SaveUsersAsJSON(users);
+                return $"Successfully deleted user: {user.UserName}";
+            }
+            else if (username == user.UserName && PasswordHasher.ToSHA256(loggedInUserProvidedPassword) != user.Password)
+            {
+                return "Password does not match";
+            }
+            else
+            {
+                return "An unexpected error occured";
+            }
+
+        }
+    }
 }

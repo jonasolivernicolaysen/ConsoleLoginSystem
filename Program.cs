@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using ConsoleApp;
+using System.Threading;
 
 List<User> users = UserStorage.LoadUsers();
 
@@ -8,8 +9,7 @@ while (true)
     Console.WriteLine("\nChoose an option:");
     Console.WriteLine("1) Register");
     Console.WriteLine("2) Login");
-    Console.WriteLine("3) Log Out");
-    Console.WriteLine("4) Exit");
+    Console.WriteLine("3) Exit");
     Console.Write("> ");
         
     var choice = Console.ReadLine();
@@ -36,34 +36,44 @@ while (true)
     else if (choice == "2")
     {
         // login
-        // loginuser()
         var loginUsers = UserStorage.LoadUsers();
         var remainingAttempts = 3;
         bool shouldLogOut = false;
+        var currentSleepTime = 5000;
 
-        while (remainingAttempts > 0)
+        Console.WriteLine("\nWrite your username here, 'q' to go back, CTRL + C to quit");
+        var username = AuthService.ReadUserInput();
+        if (username == "q")
         {
-            if (shouldLogOut)
-            {
-                break;
-            }
-            remainingAttempts -= 1;
-            Console.WriteLine("\nWrite your username here, 'q' to go back, CTRL + C to quit");
-            var username = AuthService.ReadUserInput();
-            Console.WriteLine("\nWrite your password here, 'q' to go back, CTRL + C to quit");
+            // continue instead of break so it doesnt break out of main loop
+            continue;
+        }
+        while (remainingAttempts > 0 && !shouldLogOut)
+        {
+           Console.WriteLine("\nWrite your password here, 'q' to go back, CTRL + C to quit");
             var password = AuthService.ReadUserInput(isPassword: true);
             var result = AuthService.CheckIfUserExists(username, password, loginUsers);
-            if (username == "q" || password == "q")
+            if (password == "q")
             {
                 break;
             }
             Console.WriteLine("\n" + result);
             if (result != "Login successful")
             {
+                remainingAttempts--;
                 Console.WriteLine($"{remainingAttempts} attempts left");
+
+                if (remainingAttempts == 0)
+                {
+                    Console.WriteLine($"Too many failed attempts. Please wait {currentSleepTime/1000} seconds...");
+                    Thread.Sleep(currentSleepTime);
+                    currentSleepTime *= 2;
+                    remainingAttempts = 3;
+                }
             }
             else
             {
+                Console.WriteLine($"Hello, {username}!");
                 while (true)
                 {
                     if (shouldLogOut)
@@ -71,7 +81,7 @@ while (true)
                         break;
                     }
 
-                    Console.WriteLine($"Hello, {username}. Choose an option:");
+                    Console.WriteLine("Choose an option:");
                     Console.WriteLine("1) Change password");
                     Console.WriteLine("2) Delete account");
                     Console.WriteLine("3) Log out");
@@ -81,43 +91,26 @@ while (true)
 
                     if (loggedInUserChoice == "1")
                     {
-                        // changeuserpassword()
                         User.ChangeUserPassword(username);
                     }
                     else if (loggedInUserChoice == "2")
                     {
-                        // delete account
-                        // deleteuseraccount()
-                        Console.WriteLine("Confirm your password to delete your account");
-                        var loggedInUserProvidedPassword = AuthService.ReadUserInput(isPassword: true); 
-                        var JSONUsers = UserStorage.LoadUsers();
-                        foreach (var user in JSONUsers)
+                        var isUserDeleted = User.DeleteAccount(username);
+                        if (isUserDeleted.StartsWith("Successfully deleted user"))
                         {
-                            if (username == user.UserName && PasswordHasher.ToSHA256(loggedInUserProvidedPassword) == user.Password)
-                            {
-                                JSONUsers.Remove(user);
-                                UserStorage.SaveUsersAsJSON(JSONUsers);
-                                Console.WriteLine($"Successfully deleted user: {user.UserName}");
-                                shouldLogOut = true;
-                                break;
-                            }
-                            else
-                            {
-                                Console.WriteLine("Password does not match");
-                            }
-
+                            shouldLogOut = true;
+                            Console.WriteLine(isUserDeleted);
                         }
+                        else
+                        {
+                            Console.WriteLine(isUserDeleted);
+                        }
+                        
                     }
                     else if (loggedInUserChoice == "3")
                     {
-                        // log out
+                        shouldLogOut=true;
                     }
-                    else if (loggedInUserChoice == "4")
-                    {
-                        // exit
-                        break;
-                    }
-
                     else
                     {
                         Console.WriteLine("Invalid choice.");
