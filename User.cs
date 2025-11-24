@@ -88,6 +88,7 @@ namespace ConsoleApp
                     {
                         user.Password = PasswordHasher.ToSHA256(newPassword);
                         UserStorage.SaveUsersAsJSON(users);
+                        Console.WriteLine("Password successfully changed");
                         break;
                     }
                     else
