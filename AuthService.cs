@@ -129,7 +129,7 @@ namespace ConsoleApp
                 }
                 var registeredUsers = UserStorage.LoadUsers();
                 UserStorage.AddUserToJSON(username, password, registeredUsers);
-                UserStorage.LogAction($"{username} registered");
+                UserStorage.LogAction(username, UserStorage.Actions.Register);
                 AuthService.DisplayMessage($"\nUser {username} registered successfully!", success: true);
                 break;
             }
@@ -160,7 +160,7 @@ namespace ConsoleApp
                 if (userExists)
                 {
                     AuthService.DisplayMessage("\nLogin successful\n", success: true);
-                    UserStorage.LogAction($"{username} logged in");
+                    UserStorage.LogAction(username, UserStorage.Actions.Login);
                 }
                 else
                 {
@@ -220,7 +220,7 @@ namespace ConsoleApp
                         }
                         else if (loggedInUserChoice == "4")
                         {
-                            UserStorage.LogAction($"{username} logged out");
+                            UserStorage.LogAction(username, UserStorage.Actions.LogOut);
                             AuthService.DisplayMessage("Successfully logged out!", success: true);
                             shouldLogOut = true;
                         }
