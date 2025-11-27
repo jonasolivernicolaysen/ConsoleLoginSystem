@@ -9,7 +9,11 @@ namespace ConsoleApp
     {
         public static bool CheckIfUserExists(string username, string password, List<User> users)
         {
-            return users.Any(u => u.UserName == username && u.Password == PasswordHasher.ToSHA256(password));
+            var user = users.SingleOrDefault(u => u.UserName == username);
+            if (user == null)
+                return false;
+
+            return PasswordHasher.VerifyPassword(password, user.Password);
         }
 
         public static bool CheckIfUserNameExists(string username, List<User> users)

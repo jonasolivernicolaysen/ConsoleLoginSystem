@@ -38,7 +38,7 @@ namespace ConsoleApp
             var user = new User()
             {
                 UserName = username,
-                Password = PasswordHasher.ToSHA256(password),
+                Password = PasswordHasher.ToPBKDF2(password),
                 JoinDate = DateTime.UtcNow.ToString(),
             };
             users.Add(user);
@@ -146,7 +146,7 @@ namespace ConsoleApp
                 {
                     if (user.UserName == username)
                     {
-                        user.Password = PasswordHasher.ToSHA256(newPassword);
+                        user.Password = PasswordHasher.ToPBKDF2(newPassword);
                         UserStorage.SaveUsersAsJSON(users);
                         UserStorage.LogAction($"{username} changed their password");
                         AuthService.DisplayMessage("\nPassword successfully changed!", success: true);
@@ -173,13 +173,13 @@ namespace ConsoleApp
                 AuthService.DisplayMessage("\nUser doesn't exist.");
                 return false;
             }
-            else if (username == user.UserName && PasswordHasher.ToSHA256(loggedInUserProvidedPassword) != user.Password)
+            else if (username == user.UserName && !PasswordHasher.VerifyPassword(loggedInUserProvidedPassword, user.Password))
             {
                 AuthService.DisplayMessage("\nPassword does not match.");
                 return false;
 
             }
-            else if (username == user.UserName && PasswordHasher.ToSHA256(loggedInUserProvidedPassword) == user.Password)
+            else if (username == user.UserName && PasswordHasher.VerifyPassword(loggedInUserProvidedPassword, user.Password))
             {
                 users.Remove(user);
                 UserStorage.SaveUsersAsJSON(users);
