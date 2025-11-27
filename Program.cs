@@ -8,7 +8,7 @@ while (true)
     Console.WriteLine("2) Login");
     Console.WriteLine("3) Exit");
     Console.Write("> ");
-        
+
     var choice = Console.ReadLine();
 
     if (choice == "1")
@@ -31,4 +31,3 @@ while (true)
         Console.WriteLine("Invalid choice.");
     }
 }
-
