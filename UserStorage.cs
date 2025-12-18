@@ -32,6 +32,21 @@ namespace ConsoleApp
             return JsonSerializer.Deserialize<List<User>>(json) ?? new List<User>();
         }
 
+        public static List<string> LoadLog()
+        {
+            var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var folderPath = Path.Combine(baseFolder, "ConsoleApp");
+            Directory.CreateDirectory(folderPath);
+            var filePath = Path.Combine(folderPath, "log.txt");
+
+            if (!File.Exists(filePath))
+            {
+                File.WriteAllText(filePath, "");
+                return new List<string>();
+            }
+            return File.ReadAllLines(filePath).ToList();
+
+        }
 
         public static void AddUserToJSON(Role role, string username, string password, List<User> users)
         {
