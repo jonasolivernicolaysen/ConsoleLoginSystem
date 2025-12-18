@@ -4,11 +4,20 @@ using System.Text;
 
 namespace ConsoleApp
 {
+
+    public enum Role 
+    {
+        User, 
+        Admin 
+    }
+    
     internal class User
     {
+        public required Role Role { get; set; }
         public required string UserName { get; set; }
         public required string Password { get; set; }
         public required string JoinDate { get; set; }
+
 
         public static string CreateUserName()
         {

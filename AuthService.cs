@@ -128,8 +128,10 @@ namespace ConsoleApp
                     break;
                 }
                 var registeredUsers = UserStorage.LoadUsers();
-                UserStorage.AddUserToJSON(username, password, registeredUsers);
-                UserStorage.LogAction(username, UserStorage.Actions.Register);
+                var role = registeredUsers.Count == 0 ? Role.Admin : Role.User;
+                Console.WriteLine(role);
+                UserStorage.AddUserToJSON(role, username, password, registeredUsers);
+                UserStorage.LogAction(role, username, UserStorage.Actions.Register);
                 AuthService.DisplayMessage($"\nUser {username} registered successfully!", success: true);
                 break;
             }
@@ -137,7 +139,7 @@ namespace ConsoleApp
 
         public static void Login()
         {
-            var loginUsers = UserStorage.LoadUsers();
+            var users = UserStorage.LoadUsers();
             var remainingAttempts = 3;
             bool shouldLogOut = false;
             var currentSleepTime = 5000;
@@ -152,23 +154,14 @@ namespace ConsoleApp
             {
                 Console.WriteLine("\nWrite your password here, 'q' to go back, CTRL + C to quit.");
                 var password = AuthService.ReadUserInput(isPassword: true);
-                var userExists = AuthService.CheckIfUserExists(username, password, loginUsers);
+                var userExists = AuthService.CheckIfUserExists(username, password, users);
                 if (password == "q")
                 {
                     break;
                 }
-                if (userExists)
-                {
-                    AuthService.DisplayMessage("\nLogin successful\n", success: true);
-                    UserStorage.LogAction(username, UserStorage.Actions.Login);
-                }
-                else
-                {
-                    AuthService.DisplayMessage("\nInvalid credentials.\n");
-                }
-                    
                 if (!userExists)
                 {
+                    AuthService.DisplayMessage("\nInvalid credentials.\n");
                     remainingAttempts--;
                     Console.WriteLine($"{remainingAttempts} attempts left!");
 
@@ -182,7 +175,11 @@ namespace ConsoleApp
                 }
                 else
                 {
-                    Console.WriteLine($"Hello, {username}!");
+                    var user = users.First(u => u.UserName == username);
+                    AuthService.DisplayMessage("\nLogin successful\n", success: true);
+                    UserStorage.LogAction(user.Role, user.UserName, UserStorage.Actions.Login);
+
+                    Console.WriteLine($"Hello, {user.UserName}!");
                     while (true)
                     {
                         if (shouldLogOut)
@@ -200,19 +197,21 @@ namespace ConsoleApp
 
                         if (loggedInUserChoice == "1")
                         {
-                            var newUsername = UserStorage.ChangeUsername(username);
+                            var newUsername = UserStorage.ChangeUsername(user);
                             if (!string.IsNullOrEmpty(newUsername))
                             {
-                            username = newUsername;
+                                user.UserName = newUsername;
+                                users = UserStorage.LoadUsers();
                             }
                         }
                         else if (loggedInUserChoice == "2")
                         {
-                            UserStorage.ChangeUserPassword(username);
+                            UserStorage.ChangeUserPassword(user);
+                            users = UserStorage.LoadUsers();
                         }
                         else if (loggedInUserChoice == "3")
                         {
-                            var isUserDeleted = UserStorage.DeleteAccount(username);
+                            var isUserDeleted = UserStorage.DeleteAccount(user);
                             if (isUserDeleted)
                             {
                                 shouldLogOut = true;
@@ -220,7 +219,7 @@ namespace ConsoleApp
                         }
                         else if (loggedInUserChoice == "4")
                         {
-                            UserStorage.LogAction(username, UserStorage.Actions.LogOut);
+                            UserStorage.LogAction(user.Role, user.UserName, UserStorage.Actions.LogOut);
                             AuthService.DisplayMessage("Successfully logged out!", success: true);
                             shouldLogOut = true;
                         }
