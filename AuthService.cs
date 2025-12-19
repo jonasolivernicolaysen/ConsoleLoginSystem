@@ -112,5 +112,11 @@ namespace ConsoleApp
             Console.WriteLine(message);
             Console.ResetColor();
         }
+
+        public static string GenerateId()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
     }
 }

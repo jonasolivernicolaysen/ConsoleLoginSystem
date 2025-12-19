@@ -48,7 +48,7 @@ namespace ConsoleApp
                     if (user.Role == Role.User)
                     {
                         AuthService.DisplayMessage("\nLogin successful\n", success: true);
-                        UserStorage.LogAction(user.Role, user.UserName, UserStorage.Actions.Login);
+                        UserStorage.LogAction(user.Id, user.Role, user.UserName, UserStorage.Actions.Login);
 
                         Console.WriteLine($"Hello, {user.UserName}!");
                         while (true)
@@ -90,7 +90,7 @@ namespace ConsoleApp
                             }
                             else if (loggedInUserChoice == "4")
                             {
-                                UserStorage.LogAction(user.Role, user.UserName, UserStorage.Actions.LogOut);
+                                UserStorage.LogAction(user.Id, user.Role, user.UserName, UserStorage.Actions.LogOut);
                                 AuthService.DisplayMessage("Successfully logged out!", success: true);
                                 shouldLogOut = true;
                             }
@@ -128,10 +128,14 @@ namespace ConsoleApp
                             else if (loggedInUserChoice == "2")
                             {
                                 // view all users
+                                AdminControls.ViewUsers(user);
                             }
                             else if (loggedInUserChoice == "3")
                             {
                                 // view user details
+                                Console.WriteLine("Write the id of the user you'd like to inspect:");
+                                var chosenUser = Console.ReadLine();
+                                AdminControls.ViewUserDetails(user, chosenUser);
                             }
                             else if (loggedInUserChoice == "4")
                             {
@@ -148,6 +152,7 @@ namespace ConsoleApp
                             else if (loggedInUserChoice == "7")
                             {
                                 // log out
+                                shouldLogOut = true;
                             }
 
                         }

@@ -48,10 +48,11 @@ namespace ConsoleApp
 
         }
 
-        public static void AddUserToJSON(Role role, string username, string password, List<User> users)
+        public static void AddUserToJSON(string Id, Role role, string username, string password, List<User> users)
         {
             var user = new User()
             {
+                Id = Id,
                 Role = role,
                 UserName = username,
                 Password = PasswordHasher.ToPBKDF2(password),
@@ -81,14 +82,14 @@ namespace ConsoleApp
             DeleteAccount
         }
     
-        public static void LogAction(Role role, string username, Actions action, string? extra = null)
+        public static void LogAction(string id, Role role, string username, Actions action, string? extra = null)
         {
             var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             var folderPath = Path.Combine(baseFolder, "ConsoleApp");
             Directory.CreateDirectory(folderPath);
             string filePath = Path.Combine(folderPath, "log.txt");
             string timestamp = DateTime.UtcNow.ToString("O");
-            File.AppendAllText(filePath, $"{timestamp} | Role={role} | User={username} | Action={action} {(extra is null ? "" : "| " + extra)}{Environment.NewLine}");
+            File.AppendAllText(filePath, $"{timestamp} | Id={id}, Role={role} | Username={username} | Action={action} {(extra is null ? "" : "| " + extra)}{Environment.NewLine}");
         }
 
 
@@ -128,7 +129,7 @@ namespace ConsoleApp
             storedUser.UserName = newUsername;
 
             UserStorage.SaveUsersAsJSON(users);
-            UserStorage.LogAction(user.Role, oldUsername, Actions.ChangeUsername, extra: $"NewUsername={newUsername}");
+            UserStorage.LogAction(user.Id, user.Role, oldUsername, Actions.ChangeUsername, extra: $"NewUsername={newUsername}");
             AuthService.DisplayMessage("\nUsername successfully changed!", success: true);
             return newUsername;
         }
@@ -168,7 +169,7 @@ namespace ConsoleApp
             storedUser.Password = PasswordHasher.ToPBKDF2(newPassword);
             user.Password = storedUser.Password;
             UserStorage.SaveUsersAsJSON(users);
-            UserStorage.LogAction(user.Role, user.UserName, Actions.ChangePassword);
+            UserStorage.LogAction(user.Id, user.Role, user.UserName, Actions.ChangePassword);
             AuthService.DisplayMessage("\nPassword successfully changed!", success: true);
         }
 
@@ -196,7 +197,7 @@ namespace ConsoleApp
             {
                 users.Remove(u);
                 UserStorage.SaveUsersAsJSON(users);
-                UserStorage.LogAction(user.Role, user.UserName, Actions.DeleteAccount);
+                UserStorage.LogAction(user.Id, user.Role, user.UserName, Actions.DeleteAccount);
                 AuthService.DisplayMessage($"\nSucessfully deleted user: {u.UserName}", success: true);
                 return true;
             }

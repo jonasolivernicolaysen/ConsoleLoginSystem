@@ -22,8 +22,9 @@ namespace ConsoleApp
                 }
                 var registeredUsers = UserStorage.LoadUsers();
                 var role = registeredUsers.Count == 0 ? Role.Admin : Role.User;
-                UserStorage.AddUserToJSON(role, username, password, registeredUsers);
-                UserStorage.LogAction(role, username, UserStorage.Actions.Register);
+                var id = AuthService.GenerateId();
+                UserStorage.AddUserToJSON(id, role, username, password, registeredUsers);
+                UserStorage.LogAction(id, role, username, UserStorage.Actions.Register);
                 AuthService.DisplayMessage($"\nUser {username} registered successfully!", success: true);
                 break;
             }
