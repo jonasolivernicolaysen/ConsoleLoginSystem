@@ -79,7 +79,13 @@ namespace ConsoleApp
             LogOut,
             ChangeUsername,
             ChangePassword,
-            DeleteAccount
+            DeleteAccount,
+            ViewLogs,
+            ViewAllUsers,
+            InspectUser,
+            DeleteUser,
+            ChangeUserRole,
+            ChangeUserPassword
         }
     
         public static void LogAction(string id, Role role, string username, Actions action, string? extra = null)

@@ -36,7 +36,7 @@ namespace ConsoleApp
 
                     if (remainingAttempts == 0)
                     {
-                        Console.WriteLine($"Too many failed attempts. Please wait {currentSleepTime / 1000} seconds...");
+                        AuthService.DisplayMessage($"Too many failed attempts. Please wait {currentSleepTime / 1000} seconds...");
                         Thread.Sleep(currentSleepTime);
                         currentSleepTime *= 2;
                         remainingAttempts = 3;
@@ -102,6 +102,9 @@ namespace ConsoleApp
                     }
                     else if (user.Role == Role.Admin)
                     {
+
+                        AuthService.DisplayMessage("\nLogin successful", success: true);
+                        UserStorage.LogAction(user.Id, user.Role, user.UserName, UserStorage.Actions.Login);
                         while (true)
                         {
                             if (shouldLogOut)
@@ -114,7 +117,7 @@ namespace ConsoleApp
                             Console.WriteLine("3) View user details");
                             Console.WriteLine("4) Delete User");
                             Console.WriteLine("5) Change user role");
-                            Console.WriteLine("6) Reset user password");
+                            Console.WriteLine("6) Change user password");
                             Console.WriteLine("7) Log out");
                             Console.Write("> ");
 
@@ -134,24 +137,99 @@ namespace ConsoleApp
                             {
                                 // view user details
                                 Console.WriteLine("Write the id of the user you'd like to inspect:");
-                                var chosenUser = Console.ReadLine();
-                                AdminControls.ViewUserDetails(user, chosenUser);
+                                var userId = Console.ReadLine();
+                                if (string.IsNullOrEmpty(userId))
+                                {
+                                    AuthService.DisplayMessage("User id cannot be empty.");
+                                    break;
+                                }
+                                else
+                                {
+                                    AdminControls.ViewUserDetails(user, userId);
+                                }
                             }
                             else if (loggedInUserChoice == "4")
                             {
                                 // delete user
+                                Console.WriteLine("Write the id of the user you'd like to delete:");
+                                var userId = Console.ReadLine();
+                                if (string.IsNullOrEmpty(userId))
+                                {
+                                    AuthService.DisplayMessage("User id cannot be empty.");
+                                    break;
+                                }
+                                else
+                                {
+                                    AdminControls.ViewUserDetails(user, userId);
+                                }
+                                Console.WriteLine($"Are you sure you'd like to delete user {userId}? (y/n)");
+                                var confirmation = Console.ReadLine();
+                                if (confirmation?.ToLower() != "y")
+                                {
+                                    AuthService.DisplayMessage("Action aborted");
+                                    break;
+                                }
+                                AdminControls.DeleteUser(user, userId);
                             }
                             else if (loggedInUserChoice == "5")
                             {
                                 // change user role
+                                Console.WriteLine("Write the id of the user you'd like to change the role of:");
+                                var userId = Console.ReadLine();
+                                if (string.IsNullOrEmpty(userId))
+                                {
+                                    AuthService.DisplayMessage("User id cannot be empty.");
+                                    break;
+                                }
+                                else
+                                {
+                                    AdminControls.ViewUserDetails(user, userId);
+                                }
+
+                                Console.WriteLine($"Write the new role of user {userId}:");
+                                var roleInput = Console.ReadLine();
+                                if (string.IsNullOrEmpty(roleInput))
+                                {
+                                    AuthService.DisplayMessage("Role cannot be empty.");
+                                    break;
+                                }
+
+                                Console.WriteLine("Confirm (y/n)");
+                                var confirmation = Console.ReadLine();
+                                if (string.IsNullOrEmpty(confirmation))
+                                {
+                                    AuthService.DisplayMessage("Confirmation cannot be empty.");
+                                    break;
+                                }
+                                else
+                                {
+                                    AdminControls.ViewUserDetails(user, userId);
+                                }
+                                if (confirmation.ToLower() != "y")
+                                {
+                                    AuthService.DisplayMessage("Action aborted.", success: true);
+                                    break;
+                                }
+                                AdminControls.ChangeUserRole(user, userId, roleInput);
                             }
                             else if (loggedInUserChoice == "6")
                             {
-                                // reset user password
+                                // change user password
+                                Console.WriteLine("Write the id of the user you'd like to change the password of:");
+                                var userId = Console.ReadLine();
+                                if (string.IsNullOrEmpty(userId))
+                                {
+                                    AuthService.DisplayMessage("User id cannot be empty.");
+                                    break;
+                                }
+                                var newPassword = User.CreatePassword();
+                                AdminControls.ChangeUserPassword(user, userId, newPassword);
                             }
                             else if (loggedInUserChoice == "7")
                             {
                                 // log out
+                                UserStorage.LogAction(user.Id, user.Role, user.UserName, UserStorage.Actions.LogOut);
+                                AuthService.DisplayMessage("Successfully logged out!", success: true);
                                 shouldLogOut = true;
                             }
 
