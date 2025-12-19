@@ -1,14 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
+
 
 namespace ConsoleApp
 {
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum Role 
+    {
+        User, 
+        Admin 
+    }
+    
     internal class User
     {
+        public required string Id { get; set; }
+        public required Role Role { get; set; }
         public required string UserName { get; set; }
         public required string Password { get; set; }
         public required string JoinDate { get; set; }
+
 
         public static string CreateUserName()
         {

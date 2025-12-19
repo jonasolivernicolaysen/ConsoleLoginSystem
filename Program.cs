@@ -14,12 +14,12 @@ while (true)
     if (choice == "1")
     {
         // register
-        AuthService.Register();
+        RegisterService.Register();
     }
     else if (choice == "2")
     {
         // login
-        AuthService.Login();
+        LoginService.Login();
     }
     else if (choice == "3")
     {

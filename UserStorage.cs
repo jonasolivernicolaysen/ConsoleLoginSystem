@@ -32,11 +32,28 @@ namespace ConsoleApp
             return JsonSerializer.Deserialize<List<User>>(json) ?? new List<User>();
         }
 
+        public static List<string> LoadLog()
+        {
+            var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var folderPath = Path.Combine(baseFolder, "ConsoleApp");
+            Directory.CreateDirectory(folderPath);
+            var filePath = Path.Combine(folderPath, "log.txt");
 
-        public static void AddUserToJSON(string username, string password, List<User> users)
+            if (!File.Exists(filePath))
+            {
+                File.WriteAllText(filePath, "");
+                return new List<string>();
+            }
+            return File.ReadAllLines(filePath).ToList();
+
+        }
+
+        public static void AddUserToJSON(string Id, Role role, string username, string password, List<User> users)
         {
             var user = new User()
             {
+                Id = Id,
+                Role = role,
                 UserName = username,
                 Password = PasswordHasher.ToPBKDF2(password),
                 JoinDate = DateTime.UtcNow.ToString("O"),
@@ -62,138 +79,132 @@ namespace ConsoleApp
             LogOut,
             ChangeUsername,
             ChangePassword,
-            DeleteAccount
+            DeleteAccount,
+            ViewLogs,
+            ViewAllUsers,
+            InspectUser,
+            DeleteUser,
+            ChangeUserRole,
+            ChangeUserPassword
         }
     
-        public static void LogAction(string username, Actions action, string? extra = null)
+        public static void LogAction(string id, Role role, string username, Actions action, string? extra = null)
         {
             var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             var folderPath = Path.Combine(baseFolder, "ConsoleApp");
             Directory.CreateDirectory(folderPath);
             string filePath = Path.Combine(folderPath, "log.txt");
             string timestamp = DateTime.UtcNow.ToString("O");
-            File.AppendAllText(filePath, $"{timestamp} | User={username} | Action={action} {(extra is null ? "" : "| " + extra)}{Environment.NewLine}");
+            File.AppendAllText(filePath, $"{timestamp} | Id={id}, Role={role} | Username={username} | Action={action} {(extra is null ? "" : "| " + extra)}{Environment.NewLine}");
         }
 
 
-        public static string ChangeUsername(string oldUsername)
+        public static string ChangeUsername(User user)
         {
             var users = UserStorage.LoadUsers();
             Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
             var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
-            var isPasswordCorrect = AuthService.CheckIfUserExists(oldUsername, repeatedPassword, users);
-            if (!isPasswordCorrect)
+            
+            if (!PasswordHasher.VerifyPassword(repeatedPassword, user.Password))
             {
                 AuthService.DisplayMessage("\nPassword does not match!");
                 return "";
             }
-            else
+            Console.WriteLine("\nWrite your new username here: ");
+            var newUsername = AuthService.ReadUserInput();
+            var validationResult = AuthService.checkUserName(newUsername, checkForDuplicates: false);
+            if (validationResult != "This username is valid!")
             {
-                Console.WriteLine("\nWrite your new username here: ");
-                var newUsername = AuthService.ReadUserInput();
-                var isUsernameValid = AuthService.checkUserName(newUsername, checkForDuplicates: false);
-                if (isUsernameValid != "This username is valid!")
-                {
-                    AuthService.DisplayMessage(isUsernameValid);
-                    return "";
-                }
-                var usernameIsTaken = AuthService.CheckIfUserNameExists(newUsername, users);
-                if (usernameIsTaken)
-                {
-                    AuthService.DisplayMessage("\nUsername not available.");
-                    return "";
-                }
-                foreach (User user in users)
-                {
-                    if (user.UserName == oldUsername)
-                    {
-                        user.UserName = newUsername;
-                        UserStorage.SaveUsersAsJSON(users);
-                        UserStorage.LogAction(oldUsername, Actions.ChangeUsername, $"New username={newUsername}");
-                        AuthService.DisplayMessage("\nUsername successfully changed!", success: true);
-                        return newUsername;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
+                AuthService.DisplayMessage(validationResult);
+                return "";
+            }
+            var usernameIsTaken = AuthService.CheckIfUserNameExists(newUsername, users);
+            if (usernameIsTaken)
+            {
+                AuthService.DisplayMessage("\nUsername not available.");
+                return "";
+            }
+            var storedUser = users.FirstOrDefault(u => u.UserName == user.UserName);
+            if (storedUser == null)
+            {
                 AuthService.DisplayMessage("User not found");
                 return "";
             }
+
+            var oldUsername = user.UserName;
+            storedUser.UserName = newUsername;
+
+            UserStorage.SaveUsersAsJSON(users);
+            UserStorage.LogAction(user.Id, user.Role, oldUsername, Actions.ChangeUsername, extra: $"NewUsername={newUsername}");
+            AuthService.DisplayMessage("\nUsername successfully changed!", success: true);
+            return newUsername;
         }
 
 
-        public static void ChangeUserPassword(string username)
+        public static void ChangeUserPassword(User user)
         {
             var users = UserStorage.LoadUsers();
             Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
             var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
-            var isPasswordCorrect = AuthService.CheckIfUserExists(username, repeatedPassword, users);
-            if (!isPasswordCorrect)
+            if (!PasswordHasher.VerifyPassword(repeatedPassword, user.Password))
             {
-                AuthService.DisplayMessage("\n\nPassword does not match!");
+                AuthService.DisplayMessage("\nPassword does not match!");
+                return;
             }
-            else
+           
+            Console.WriteLine("\nWrite your new password here: ");
+            var newPassword = AuthService.ReadUserInput(isPassword: true);
+            var isNewPasswordValid = AuthService.checkPassword(newPassword);
+            if (isNewPasswordValid != "This password is valid!")
             {
-                Console.WriteLine("\nWrite your new password here: ");
-                var newPassword = AuthService.ReadUserInput(isPassword: true);
-                var isNewPasswordValid = AuthService.checkPassword(newPassword);
-                if (isNewPasswordValid != "This password is valid!")
-                {
-                    AuthService.DisplayMessage("\n\n" + isNewPasswordValid);
-                    return;
-                }
-                var isNewPasswordIdentical = AuthService.CheckIfUserExists(username, newPassword, users);
-                if (isNewPasswordIdentical)
-                {
-                    AuthService.DisplayMessage("\n\nNew password cannot be identical to the old one!");
-                    return;
-                }
-                users = UserStorage.LoadUsers();
-                foreach (User user in users)
-                {
-                    if (user.UserName == username)
-                    {
-                        user.Password = PasswordHasher.ToPBKDF2(newPassword);
-                        UserStorage.SaveUsersAsJSON(users);
-                        UserStorage.LogAction(username, Actions.ChangePassword);
-                        AuthService.DisplayMessage("\nPassword successfully changed!", success: true);
-                        break;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
+                AuthService.DisplayMessage("\n\n" + isNewPasswordValid);
+                return;
             }
+            if (PasswordHasher.VerifyPassword(newPassword, user.Password))
+            {
+                AuthService.DisplayMessage("\n\nNew password cannot be identical to the old one!");
+                return;
+            }
+
+            var storedUser = users.FirstOrDefault(u => u.UserName == user.UserName);
+            if (storedUser == null)
+            {
+                AuthService.DisplayMessage("User not found");
+                return;
+            }
+            storedUser.Password = PasswordHasher.ToPBKDF2(newPassword);
+            user.Password = storedUser.Password;
+            UserStorage.SaveUsersAsJSON(users);
+            UserStorage.LogAction(user.Id, user.Role, user.UserName, Actions.ChangePassword);
+            AuthService.DisplayMessage("\nPassword successfully changed!", success: true);
         }
 
 
-        public static bool DeleteAccount(string username)
+        public static bool DeleteAccount(User user)
         {
+            var username = user.UserName;
             Console.WriteLine("Confirm your password to delete your account:");
             var loggedInUserProvidedPassword = AuthService.ReadUserInput(isPassword: true);
             var users = UserStorage.LoadUsers();
 
-            var user = users.FirstOrDefault(user => user.UserName == username);
-            if (user == null)
+            var u = users.FirstOrDefault(u => u.UserName == username);
+            if (u == null)
             {
                 AuthService.DisplayMessage("\nUser doesn't exist.");
                 return false;
             }
-            else if (username == user.UserName && !PasswordHasher.VerifyPassword(loggedInUserProvidedPassword, user.Password))
+            else if (username == u.UserName && !PasswordHasher.VerifyPassword(loggedInUserProvidedPassword, u.Password))
             {
                 AuthService.DisplayMessage("\nPassword does not match.");
                 return false;
 
             }
-            else if (username == user.UserName && PasswordHasher.VerifyPassword(loggedInUserProvidedPassword, user.Password))
+            else if (username == u.UserName && PasswordHasher.VerifyPassword(loggedInUserProvidedPassword, u.Password))
             {
-                users.Remove(user);
+                users.Remove(u);
                 UserStorage.SaveUsersAsJSON(users);
-                UserStorage.LogAction(username, Actions.DeleteAccount);
-                AuthService.DisplayMessage($"\nSucessfully deleted user: {user.UserName}", success: true);
+                UserStorage.LogAction(user.Id, user.Role, user.UserName, Actions.DeleteAccount);
+                AuthService.DisplayMessage($"\nSucessfully deleted user: {u.UserName}", success: true);
                 return true;
             }
             else
