@@ -85,7 +85,8 @@ namespace ConsoleApp
             InspectUser,
             DeleteUser,
             ChangeUserRole,
-            ChangeUserPassword
+            ChangeUserPassword,
+            ForcePasswordChange
         }
     
         public static void LogAction(string id, Role role, string username, Actions action, string? extra = null)
@@ -141,15 +142,18 @@ namespace ConsoleApp
         }
 
 
-        public static void ChangeUserPassword(User user)
+        public static void ChangeUserPassword(User user, bool forcedReset = false)
         {
             var users = UserStorage.LoadUsers();
-            Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
-            var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
-            if (!PasswordHasher.VerifyPassword(repeatedPassword, user.Password))
+            if (!forcedReset)
             {
-                AuthService.DisplayMessage("\nPassword does not match!");
-                return;
+                Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
+                var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
+                if (!PasswordHasher.VerifyPassword(repeatedPassword, user.Password))
+                {
+                    AuthService.DisplayMessage("\nPassword does not match!");
+                    return;
+                }
             }
            
             Console.WriteLine("\nWrite your new password here: ");

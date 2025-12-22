@@ -14,14 +14,14 @@ namespace ConsoleApp
         Admin 
     }
     
-    internal class User
+    public class User
     {
         public required string Id { get; set; }
         public required Role Role { get; set; }
         public required string UserName { get; set; }
         public required string Password { get; set; }
         public required string JoinDate { get; set; }
-
+        public bool MustChangePassword { get; set; }
 
         public static string CreateUserName()
         {

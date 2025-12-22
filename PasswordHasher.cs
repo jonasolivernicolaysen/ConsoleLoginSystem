@@ -11,6 +11,25 @@ namespace ConsoleApp
         private const int SaltSize = 16;
         private const int KeySize = 32;
 
+        public static string GenerateRandomPassword(int length = 12)
+        {
+            const string chars =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+                "abcdefghijklmnopqrstuvwxyz" +
+                "0123456789" +
+                "!@#$%^&*";
+
+            var bytes = new byte[length];
+            RandomNumberGenerator.Fill(bytes);
+
+            var password = new char[length];
+            for (int i = 0; i < length; i++)
+            {
+                password[i] = chars[bytes[i] % chars.Length];
+            }
+            return new string(password);
+        }
+
         public static string ToPBKDF2(string password)
         {
             // generate salt

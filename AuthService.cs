@@ -118,5 +118,20 @@ namespace ConsoleApp
             return Guid.NewGuid().ToString();
         }
 
+        public static bool RequireAdmin(User? user)
+        // check if user is admin
+        {
+            if (user == null)
+            {
+                AuthService.DisplayMessage("You must be logged in.");
+                return false;
+            }
+            if (user.Role != Role.Admin)
+            {
+                AuthService.DisplayMessage($"Access denied.");
+                return false;
+            }
+            return true;
+        }
     }
 }
