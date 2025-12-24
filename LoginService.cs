@@ -50,7 +50,7 @@ namespace ConsoleApp
                     if (user.MustChangePassword)
                     {
                         AuthService.DisplayMessage("\nYou have been forced to change your password!");
-                        UserStorage.ChangeUserPassword(Session.CurrentUser, forcedReset: true);
+                        UserStorage.ChangeUserPassword(forcedReset: true);
                         Session.CurrentUser.MustChangePassword = false;
                         UserStorage.SaveUsersAsJSON(users);
                     }
@@ -77,31 +77,35 @@ namespace ConsoleApp
 
                             if (loggedInUserChoice == "1")
                             {
-                                var newUsername = UserStorage.ChangeUsername(Session.CurrentUser);
+                                var newUsername = UserStorage.ChangeUsername();
                                 if (!string.IsNullOrEmpty(newUsername))
                                 {
-                                    Session.CurrentUser.UserName = newUsername;
+                                    var currentUser = Session.CurrentUser!;
+                                    currentUser.UserName = newUsername;
                                     users = UserStorage.LoadUsers();
                                 }
                             }
                             else if (loggedInUserChoice == "2")
                             {
-                                UserStorage.ChangeUserPassword(Session.CurrentUser);
+                                UserStorage.ChangeUserPassword();
                                 users = UserStorage.LoadUsers();
                             }
                             else if (loggedInUserChoice == "3")
                             {
-                                var isUserDeleted = UserStorage.DeleteAccount(Session.CurrentUser);
+                                var isUserDeleted = UserStorage.DeleteAccount();
                                 if (isUserDeleted)
                                 {
                                     shouldLogOut = true;
                                 }
+                                Session.CurrentUser = null;
                             }
                             else if (loggedInUserChoice == "4")
                             {
-                                UserStorage.LogAction(Session.CurrentUser.Id, Session.CurrentUser.Role, Session.CurrentUser.UserName, UserStorage.Actions.LogOut);
+                                var currentUser = Session.CurrentUser!;
+                                UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, UserStorage.Actions.LogOut);
                                 AuthService.DisplayMessage("Successfully logged out!", success: true);
                                 shouldLogOut = true;
+                                Session.CurrentUser = null;
                             }
                             else
                             {
@@ -250,11 +254,12 @@ namespace ConsoleApp
                             else if (loggedInUserChoice == "8")
                             {
                                 // log out
-                                UserStorage.LogAction(Session.CurrentUser.Id, Session.CurrentUser.Role, Session.CurrentUser.UserName, UserStorage.Actions.LogOut);
+                                var currentUser = Session.CurrentUser!;
+                                UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, UserStorage.Actions.LogOut);
                                 AuthService.DisplayMessage("Successfully logged out!", success: true);
                                 shouldLogOut = true;
+                                Session.CurrentUser = null;
                             }
-
                         }
                     }
                 }

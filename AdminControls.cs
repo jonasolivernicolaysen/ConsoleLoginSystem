@@ -105,10 +105,18 @@ namespace ConsoleApp
             }
             var users = UserStorage.LoadUsers();
             var user = users.FirstOrDefault(u => u.Id == userId);
+
             if (user == null)
             {
                 AuthService.DisplayMessage($"Id not found.");
                 return false;
+            }
+
+            if (user.Role == Role.Admin)
+            {
+                AuthService.DisplayMessage($"\nCannot delete another admin user.");
+                return false;
+
             }
 
             users.Remove(user);

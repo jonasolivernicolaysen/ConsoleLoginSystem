@@ -77,7 +77,7 @@ namespace ConsoleApp
 
         public static string ReadUserInput(bool isPassword = false)
         {
-            var password = string.Empty;
+            var password = "";
             ConsoleKey key;
             do
             {
@@ -116,6 +116,11 @@ namespace ConsoleApp
         public static string GenerateId()
         {
             return Guid.NewGuid().ToString();
+        }
+
+        public static bool RequireUser(User? user)
+        {
+            return true;
         }
 
         public static bool RequireAdmin(User? user)
