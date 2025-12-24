@@ -14,14 +14,14 @@ namespace ConsoleApp
         Admin 
     }
     
-    internal class User
+    public class User
     {
         public required string Id { get; set; }
         public required Role Role { get; set; }
         public required string UserName { get; set; }
         public required string Password { get; set; }
         public required string JoinDate { get; set; }
-
+        public bool MustChangePassword { get; set; }
 
         public static string CreateUserName()
         {
@@ -33,7 +33,7 @@ namespace ConsoleApp
                 var username = AuthService.ReadUserInput();
                 if (username == "q")
                 {
-                    return String.Empty;
+                    return "";
                 }
                 var result = AuthService.checkUserName(username, checkForDuplicates: true);
                 bool isValid = result == "This username is valid!";
@@ -53,17 +53,28 @@ namespace ConsoleApp
                 Console.WriteLine();
                 Console.WriteLine("Write your password here, 'q' to go back, CTRL + C to quit.");
                 var password = AuthService.ReadUserInput(isPassword: true);
+                
                 if (password == "q")
                 {
-                    return String.Empty;
+                    return "";
                 }
                 var result = AuthService.checkPassword(password);
                 bool isValid = result == "This password is valid!";
-                if (isValid)
+                if (!isValid)
                 {
-                    return password;
+                    AuthService.DisplayMessage(result);
+                    return "";
                 }
-                AuthService.DisplayMessage(result);
+                Console.WriteLine("\n\nRepeat your password here, 'q' to go back, CTRL + C to quit.");
+                var password2 = AuthService.ReadUserInput(isPassword: true);
+
+
+                if (password != password2)
+                {
+                    AuthService.DisplayMessage("\nPasswords do not match!");
+                    return "";
+                }
+                return password;
             }
         }
     }

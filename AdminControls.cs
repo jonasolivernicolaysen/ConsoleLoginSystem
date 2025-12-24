@@ -8,12 +8,10 @@ namespace ConsoleApp
 {
     internal class AdminControls
     {
-        public static void ViewLogs(User adminUser)
+        public static void ViewLogs()
         {
-            // check if user is admin
-            if (adminUser.Role != Role.Admin)
+            if (!AuthService.RequireAdmin(Session.CurrentUser))
             {
-                AuthService.DisplayMessage($"Access denied.");
                 return;
             }
             var log = UserStorage.LoadLog();
@@ -22,15 +20,14 @@ namespace ConsoleApp
             {
                 Console.WriteLine(item);
             }
-            UserStorage.LogAction(adminUser.Id, adminUser.Role, adminUser.UserName, Actions.ViewLogs);
+            var currentUser = Session.CurrentUser!;
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.ViewLogs);
         }
 
-        public static void ViewUsers(User adminUser)
+        public static void ViewUsers()
         {
-            // check if user is admin
-            if (adminUser.Role != Role.Admin)
+            if (!AuthService.RequireAdmin(Session.CurrentUser))
             {
-                AuthService.DisplayMessage($"Access denied.");
                 return;
             }
             var users = UserStorage.LoadUsers();
@@ -39,15 +36,14 @@ namespace ConsoleApp
             {
                 Console.WriteLine($"{u.Role}, {u.UserName}, {u.JoinDate}");
             }
-            UserStorage.LogAction(adminUser.Id, adminUser.Role, adminUser.UserName, Actions.ViewAllUsers);
+            var currentUser = Session.CurrentUser!;
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.ViewAllUsers);
         }
 
-        public static void ViewUserDetails(User adminUser, string userId)
+        public static void ViewUserDetails(string userId)
         {
-            // check if user is admin
-            if (adminUser.Role != Role.Admin)
+            if (!AuthService.RequireAdmin(Session.CurrentUser))
             {
-                AuthService.DisplayMessage("Access denied.");
                 return;
             }
             var users = UserStorage.LoadUsers();
@@ -97,42 +93,46 @@ namespace ConsoleApp
             {
                 Console.WriteLine(action);
             }
-            UserStorage.LogAction(adminUser.Id, adminUser.Role, adminUser.UserName, Actions.InspectUser, extra: $"InspectedUser={user.UserName}");
+            var currentUser = Session.CurrentUser!;
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.InspectUser, extra: $"InspectedUser={user.UserName}");
         }
 
-        public static bool DeleteUser(User adminUser, string userId)
+        public static bool DeleteUser(string userId)
         {
-            // check if user is admin
-            if (adminUser.Role != Role.Admin)
+            if (!AuthService.RequireAdmin(Session.CurrentUser))
             {
-                AuthService.DisplayMessage($"Access denied.");
                 return false;
             }
             var users = UserStorage.LoadUsers();
             var user = users.FirstOrDefault(u => u.Id == userId);
+
             if (user == null)
             {
                 AuthService.DisplayMessage($"Id not found.");
                 return false;
             }
 
+            if (user.Role == Role.Admin)
+            {
+                AuthService.DisplayMessage($"\nCannot delete another admin user.");
+                return false;
+
+            }
+
             users.Remove(user);
             UserStorage.SaveUsersAsJSON(users);
-            UserStorage.LogAction(adminUser.Id, adminUser.Role, adminUser.UserName, Actions.DeleteUser, extra: $"DeletedUser={user.UserName}");
+            var currentUser = Session.CurrentUser!;
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.DeleteUser, extra: $"DeletedUser={user.UserName}");
             AuthService.DisplayMessage($"\nSucessfully deleted user: {user.UserName}", success: true);
             return true;
         }   
         
-        public static bool ChangeUserRole(User adminUser, string userId, string roleInput)
+        public static void ChangeUserRole(string userId, string roleInput)
         {
-            // check if user is admin
-            if (adminUser.Role != Role.Admin)
+            if (!AuthService.RequireAdmin(Session.CurrentUser))
             {
-                AuthService.DisplayMessage($"Access denied.");
-                return false;
+                return;
             }
-
-
             if (!Enum.TryParse<Role>(roleInput, ignoreCase: true, out var newRole))
             {
                 AuthService.DisplayMessage($"Role input invalid.");
@@ -143,48 +143,74 @@ namespace ConsoleApp
             if (user == null)
             {
                 AuthService.DisplayMessage($"User not found.");
-                return  false;
+                return;
             }
 
             else if (user.Role == newRole)
             {
                 AuthService.DisplayMessage($"New role cannot be identical to old role.");
-                return false;
+                return;
             }
             var oldRole = user.Role;
             user.Role = newRole;
             UserStorage.SaveUsersAsJSON(users);
-            UserStorage.LogAction(adminUser.Id, adminUser.Role, adminUser.UserName, Actions.ChangeUserRole, extra: $"ChangedRoleOf={user.UserName}(from: {oldRole} to: {newRole})");
+            var currentUser = Session.CurrentUser!;
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.ChangeUserRole, extra: $"ChangedRoleOf={user.UserName}(from: {oldRole} to: {newRole})");
             AuthService.DisplayMessage($"Successfully changed role of user {user.UserName} to {user.Role}!", success: true);
-            return true;
+            return;
         }
 
-        public static bool ChangeUserPassword(User adminUser, string userId, string newPassword)
+        public static void ChangeUserPassword(string userId, string newPassword)
         {
-            // check if user is admin
-            if (adminUser.Role != Role.Admin)
+            if (!AuthService.RequireAdmin(Session.CurrentUser))
             {
-                AuthService.DisplayMessage($"Access denied.");
-                return false;
+                return;
             }
             var users = UserStorage.LoadUsers();
             var user = users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
             {
                 AuthService.DisplayMessage($"User not found.");
-                return false;
+                return;
             }
             // new password cannot be identical to old password
             if (PasswordHasher.VerifyPassword(newPassword, user.Password))
             {
                 AuthService.DisplayMessage("\nNew password cannot be identical to old one.");
-                return false;
+                return;
             }
             user.Password = PasswordHasher.ToPBKDF2(newPassword);
             UserStorage.SaveUsersAsJSON(users);
-            UserStorage.LogAction(adminUser.Id, adminUser.Role, adminUser.UserName, Actions.ChangeUserPassword, extra: $"ChangedPasswordForUser={user.UserName}");
+            var currentUser = Session.CurrentUser!;
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.ChangeUserPassword, extra: $"ChangedPasswordForUser={user.UserName}");
             AuthService.DisplayMessage($"\nSuccessfully changed the password of user {user.UserName}", success: true);
-            return true;
+            return;
+        }
+    public static void ForcePasswordChange(string userId)
+        {
+            if (!AuthService.RequireAdmin(Session.CurrentUser))
+            {
+                return;
+            }
+            var users = UserStorage.LoadUsers();
+            var user = users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                AuthService.DisplayMessage($"User not found.");
+                return;
+            }
+
+            string temporaryPassword = PasswordHasher.GenerateRandomPassword();
+            user.Password = PasswordHasher.ToPBKDF2(temporaryPassword);
+
+            Console.WriteLine("Temporary password:");
+            Console.WriteLine(temporaryPassword);
+
+            user.MustChangePassword = true;
+            UserStorage.SaveUsersAsJSON(users);
+            var currentUser = Session.CurrentUser!;
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.ForcePasswordChange, extra: $"ForcedPasswordFor={user.UserName}");
+            AuthService.DisplayMessage($"\nSuccessfully forced password change on {user.UserName}", success: true);
         }
     }
 }

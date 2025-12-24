@@ -85,7 +85,8 @@ namespace ConsoleApp
             InspectUser,
             DeleteUser,
             ChangeUserRole,
-            ChangeUserPassword
+            ChangeUserPassword,
+            ForcePasswordChange
         }
     
         public static void LogAction(string id, Role role, string username, Actions action, string? extra = null)
@@ -99,13 +100,14 @@ namespace ConsoleApp
         }
 
 
-        public static string ChangeUsername(User user)
+        public static string ChangeUsername()
         {
+            var currentUser = Session.CurrentUser!;
             var users = UserStorage.LoadUsers();
             Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
             var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
             
-            if (!PasswordHasher.VerifyPassword(repeatedPassword, user.Password))
+            if (!PasswordHasher.VerifyPassword(repeatedPassword, currentUser.Password))
             {
                 AuthService.DisplayMessage("\nPassword does not match!");
                 return "";
@@ -124,32 +126,36 @@ namespace ConsoleApp
                 AuthService.DisplayMessage("\nUsername not available.");
                 return "";
             }
-            var storedUser = users.FirstOrDefault(u => u.UserName == user.UserName);
+            var storedUser = users.FirstOrDefault(u => u.UserName == currentUser.UserName);
             if (storedUser == null)
             {
                 AuthService.DisplayMessage("User not found");
                 return "";
             }
 
-            var oldUsername = user.UserName;
+            var oldUsername = currentUser.UserName;
             storedUser.UserName = newUsername;
 
             UserStorage.SaveUsersAsJSON(users);
-            UserStorage.LogAction(user.Id, user.Role, oldUsername, Actions.ChangeUsername, extra: $"NewUsername={newUsername}");
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, oldUsername, Actions.ChangeUsername, extra: $"NewUsername={newUsername}");
             AuthService.DisplayMessage("\nUsername successfully changed!", success: true);
             return newUsername;
         }
 
 
-        public static void ChangeUserPassword(User user)
+        public static void ChangeUserPassword(bool forcedReset = false)
         {
+            var currentUser = Session.CurrentUser!;
             var users = UserStorage.LoadUsers();
-            Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
-            var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
-            if (!PasswordHasher.VerifyPassword(repeatedPassword, user.Password))
+            if (!forcedReset)
             {
-                AuthService.DisplayMessage("\nPassword does not match!");
-                return;
+                Console.WriteLine("\nRepeat your password here, CTRL + C to quit");
+                var repeatedPassword = AuthService.ReadUserInput(isPassword: true);
+                if (!PasswordHasher.VerifyPassword(repeatedPassword, currentUser.Password))
+                {
+                    AuthService.DisplayMessage("\nPassword does not match!");
+                    return;
+                }
             }
            
             Console.WriteLine("\nWrite your new password here: ");
@@ -160,29 +166,31 @@ namespace ConsoleApp
                 AuthService.DisplayMessage("\n\n" + isNewPasswordValid);
                 return;
             }
-            if (PasswordHasher.VerifyPassword(newPassword, user.Password))
+            if (PasswordHasher.VerifyPassword(newPassword, currentUser.Password))
             {
                 AuthService.DisplayMessage("\n\nNew password cannot be identical to the old one!");
                 return;
             }
 
-            var storedUser = users.FirstOrDefault(u => u.UserName == user.UserName);
+            var storedUser = users.FirstOrDefault(u => u.UserName == currentUser.UserName);
             if (storedUser == null)
             {
                 AuthService.DisplayMessage("User not found");
                 return;
             }
             storedUser.Password = PasswordHasher.ToPBKDF2(newPassword);
-            user.Password = storedUser.Password;
+            currentUser.Password = storedUser.Password;
             UserStorage.SaveUsersAsJSON(users);
-            UserStorage.LogAction(user.Id, user.Role, user.UserName, Actions.ChangePassword);
+            UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.ChangePassword);
             AuthService.DisplayMessage("\nPassword successfully changed!", success: true);
         }
 
 
-        public static bool DeleteAccount(User user)
+        public static bool DeleteAccount()
         {
-            var username = user.UserName;
+
+            var currentUser = Session.CurrentUser!;
+            var username = currentUser.UserName;
             Console.WriteLine("Confirm your password to delete your account:");
             var loggedInUserProvidedPassword = AuthService.ReadUserInput(isPassword: true);
             var users = UserStorage.LoadUsers();
@@ -203,7 +211,7 @@ namespace ConsoleApp
             {
                 users.Remove(u);
                 UserStorage.SaveUsersAsJSON(users);
-                UserStorage.LogAction(user.Id, user.Role, user.UserName, Actions.DeleteAccount);
+                UserStorage.LogAction(currentUser.Id, currentUser.Role, currentUser.UserName, Actions.DeleteAccount);
                 AuthService.DisplayMessage($"\nSucessfully deleted user: {u.UserName}", success: true);
                 return true;
             }
