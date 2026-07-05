@@ -13,10 +13,10 @@ namespace ConsoleApp
     {
         public static List<User> LoadUsers()
         {
-            var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var folderPath = Path.Combine(baseFolder, "ConsoleApp");
-            Directory.CreateDirectory(folderPath);
-            string filePath = Path.Combine(folderPath, "users.txt");
+            //var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
+            Directory.CreateDirectory(dataDirectory);
+            string filePath = Path.Combine(dataDirectory, "users.txt");
 
             if (!File.Exists(filePath))
             {
@@ -65,10 +65,9 @@ namespace ConsoleApp
         public static void SaveUsersAsJSON(List<User> users)
         {
             string userAsJSON = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
-            var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var folderPath = Path.Combine(baseFolder, "ConsoleApp");
-            Directory.CreateDirectory(folderPath);
-            string filePath = Path.Combine(folderPath, "users.txt");
+            var dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
+            Directory.CreateDirectory(dataDirectory);
+            string filePath = Path.Combine(dataDirectory, "users.txt");
             File.WriteAllText(filePath, userAsJSON + Environment.NewLine);
         }
 
@@ -91,10 +90,9 @@ namespace ConsoleApp
     
         public static void LogAction(string id, Role role, string username, Actions action, string? extra = null)
         {
-            var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var folderPath = Path.Combine(baseFolder, "ConsoleApp");
-            Directory.CreateDirectory(folderPath);
-            string filePath = Path.Combine(folderPath, "log.txt");
+            var dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
+            Directory.CreateDirectory(dataDirectory);
+            string filePath = Path.Combine(dataDirectory, "log.txt");
             string timestamp = DateTime.UtcNow.ToString("O");
             File.AppendAllText(filePath, $"{timestamp} | Id={id}, Role={role} | Username={username} | Action={action} {(extra is null ? "" : "| " + extra)}{Environment.NewLine}");
         }

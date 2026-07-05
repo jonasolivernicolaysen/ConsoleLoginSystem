@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "4684b8f3-049f-49c6-9721-5f6f86f97aa8",
+    "Role": "Admin",
+    "UserName": "jonas",
+    "Password": "100000.kcH3RHYWMWTu76MAa5AAug==.rkHEFkYWlR36Z13HQjBSOK5Ia2Ul8xzEM1lnRVe2dEk=",
+    "JoinDate": "2026-07-05T10:59:05.9202814Z",
+    "MustChangePassword": false
+  },
+  {
+    "Id": "471a6e95-bb08-455d-be89-d8f1a4b67ca1",
+    "Role": "User",
+    "UserName": "ronja",
+    "Password": "100000.p5Bw9yk3H1foSZmX77dXMA==.Z/cdzQgVDrnGggFZhQZzKeu6xuZ3exiMylXH/tGeHkc=",
+    "JoinDate": "2026-07-05T11:00:25.1920720Z",
+    "MustChangePassword": false
+  },
+  {
+    "Id": "83db71fa-b4cd-44bd-a4d2-331733f2bbc4",
+    "Role": "User",
+    "UserName": "ronjas",
+    "Password": "100000.r3viIpTV2Y0Yticd/v0QDw==.YNVoam9JngEka9qXp5WAr2QD/m\u002BrfbiGk4bdy\u002B3vADA=",
+    "JoinDate": "2026-07-05T11:04:35.3932365Z",
+    "MustChangePassword": false
+  }
+]
