@@ -13,7 +13,6 @@ namespace ConsoleApp
     {
         public static List<User> LoadUsers()
         {
-            //var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             var dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
             Directory.CreateDirectory(dataDirectory);
             string filePath = Path.Combine(dataDirectory, "users.txt");
@@ -34,10 +33,9 @@ namespace ConsoleApp
 
         public static List<string> LoadLog()
         {
-            var baseFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var folderPath = Path.Combine(baseFolder, "ConsoleApp");
-            Directory.CreateDirectory(folderPath);
-            var filePath = Path.Combine(folderPath, "log.txt");
+            var dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
+            Directory.CreateDirectory(dataDirectory);
+            string filePath = Path.Combine(dataDirectory, "log.txt");
 
             if (!File.Exists(filePath))
             {
