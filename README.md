@@ -32,13 +32,13 @@ The admin can perform neccessary admin operations such as viewing the logs
 Build the image and start the application:
 
 ```bash
-docker compose run --build --rm consoleapp
+docker compose run --build --rm consoleloginsystem
 ```
 
 On subsequent runs, if no source code has changed, you don't need `--build`:
 
 ```bash
-docker compose run --rm consoleapp
+docker compose run --rm consoleloginsystem
 ```
 ```
 
