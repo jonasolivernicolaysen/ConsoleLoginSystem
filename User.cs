@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 
-namespace ConsoleApp
+namespace ConsoleLoginSystem
 {
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

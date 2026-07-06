@@ -1,4 +1,4 @@
-﻿using ConsoleApp;
+﻿using ConsoleLoginSystem;
 using System.Threading;
 
 while (true)

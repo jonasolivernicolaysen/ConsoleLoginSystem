@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace ConsoleApp
+namespace ConsoleLoginSystem
 {
     internal class UserStorage
     {

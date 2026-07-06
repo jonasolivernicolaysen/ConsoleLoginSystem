@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using static ConsoleApp.UserStorage;
+using static ConsoleLoginSystem.UserStorage;
 
-namespace ConsoleApp
+namespace ConsoleLoginSystem
 {
     internal class AdminControls
     {

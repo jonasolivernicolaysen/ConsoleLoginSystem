@@ -1,6 +1,6 @@
 services:
-  consoleapp:
-    container_name: consoleapp
+  consoleloginsystem:
+    container_name: consoleloginsystem
 
     build: .
     stdin_open: true
